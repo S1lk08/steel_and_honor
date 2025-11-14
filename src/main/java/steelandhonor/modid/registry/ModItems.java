@@ -1,73 +1,118 @@
 package steelandhonor.modid.registry;
 
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
-import net.minecraft.item.SwordItem;
-import net.minecraft.item.ToolMaterials;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
+
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ArmorComponent;
+import net.minecraft.component.type.ItemAttributeModifiersComponent;
+import net.minecraft.component.type.ItemAttributeModifiersComponent.Slot;
+import net.minecraft.component.type.ToolComponent;
+
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 
 import steelandhonor.modid.Steel_and_honor;
 
-/**
- * Very simple item registry for 1.21.8:
- * - Knight armor set (iron-tier stats)
- * - Knight sword (iron-ish stats)
- *
- * No data-components, just the classic ArmorItem / SwordItem API so it compiles cleanly.
- */
+import java.util.UUID;
+
 public class ModItems {
 
-    // Armor
     public static Item KNIGHT_HELMET;
     public static Item KNIGHT_CHESTPLATE;
     public static Item KNIGHT_LEGGINGS;
     public static Item KNIGHT_BOOTS;
 
-    // Weapon
     public static Item KNIGHT_SWORD;
 
-    /**
-     * Call this from your main mod init class.
-     * It registers all items.
-     */
     public static void initialize() {
 
-        // ---------- ARMOR (IRON-LIKE) ----------
+        // ARMOR COMPONENT (1.21.8)
+        ArmorComponent knightArmor = new ArmorComponent(
+                15,
+                new int[]{2, 5, 4, 1},
+                12,
+                SoundEvents.ITEM_ARMOR_EQUIP_IRON,
+                0.0f,
+                0.0f
+        );
+
         KNIGHT_HELMET = register("knight_helmet",
-                new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.HELMET,
-                        new Item.Settings()));
-
-        KNIGHT_CHESTPLATE = register("knight_chestplate",
-                new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.CHESTPLATE,
-                        new Item.Settings()));
-
-        KNIGHT_LEGGINGS = register("knight_leggings",
-                new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.LEGGINGS,
-                        new Item.Settings()));
-
-        KNIGHT_BOOTS = register("knight_boots",
-                new ArmorItem(ArmorMaterials.IRON, ArmorItem.Type.BOOTS,
-                        new Item.Settings()));
-
-        // ---------- SWORD (IRON-LIKE) ----------
-        // Damage / speed are the usual SwordItem constructor values:
-        //   new SwordItem(material, attackDamage, attackSpeed, settings)
-        KNIGHT_SWORD = register("knight_sword",
-                new SwordItem(
-                        ToolMaterials.IRON,
-                        3,          // extra damage over material base
-                        -2.4f,      // attack speed
-                        new Item.Settings()
+                new Item(new Item.Settings()
+                        .component(DataComponentTypes.ARMOR, knightArmor)
+                        .component(DataComponentTypes.EQUIPMENT_SLOT,
+                                Items.IRON_HELMET.getDefaultStack().get(DataComponentTypes.EQUIPMENT_SLOT))
                 ));
 
-        Steel_and_honor.LOGGER.info("[Steel_and_honor] Registered knight armor + sword (classic API).");
+        KNIGHT_CHESTPLATE = register("knight_chestplate",
+                new Item(new Item.Settings()
+                        .component(DataComponentTypes.ARMOR, knightArmor)
+                        .component(DataComponentTypes.EQUIPMENT_SLOT,
+                                Items.IRON_CHESTPLATE.getDefaultStack().get(DataComponentTypes.EQUIPMENT_SLOT))
+                ));
+
+        KNIGHT_LEGGINGS = register("knight_leggings",
+                new Item(new Item.Settings()
+                        .component(DataComponentTypes.ARMOR, knightArmor)
+                        .component(DataComponentTypes.EQUIPMENT_SLOT,
+                                Items.IRON_LEGGINGS.getDefaultStack().get(DataComponentTypes.EQUIPMENT_SLOT))
+                ));
+
+        KNIGHT_BOOTS = register("knight_boots",
+                new Item(new Item.Settings()
+                        .component(DataComponentTypes.ARMOR, knightArmor)
+                        .component(DataComponentTypes.EQUIPMENT_SLOT,
+                                Items.IRON_BOOTS.getDefaultStack().get(DataComponentTypes.EQUIPMENT_SLOT))
+                ));
+
+        // SWORD ATTRIBUTES (1.21.8)
+        ItemAttributeModifiersComponent swordAttributes = ItemAttributeModifiersComponent.builder()
+                .add(
+                        EntityAttributes.GENERIC_ATTACK_DAMAGE,
+                        new EntityAttributeModifier(
+                                UUID.randomUUID(),
+                                5.0,
+                                EntityAttributeModifier.Operation.ADD_VALUE
+                        ),
+                        Slot.MAINHAND
+                )
+                .add(
+                        EntityAttributes.GENERIC_ATTACK_SPEED,
+                        new EntityAttributeModifier(
+                                UUID.randomUUID(),
+                                -2.4,
+                                EntityAttributeModifier.Operation.ADD_VALUE
+                        ),
+                        Slot.MAINHAND
+                )
+                .build();
+
+        ToolComponent swordTool = new ToolComponent(
+                0,
+                1.0f,
+                0
+        );
+
+        KNIGHT_SWORD = register("knight_sword",
+                new Item(new Item.Settings()
+                        .component(DataComponentTypes.ATTRIBUTE_MODIFIERS, swordAttributes)
+                        .component(DataComponentTypes.TOOL, swordTool)
+                        .component(DataComponentTypes.EQUIPMENT_SLOT,
+                                Items.IRON_SWORD.getDefaultStack().get(DataComponentTypes.EQUIPMENT_SLOT))
+                ));
+
+        Steel_and_honor.LOGGER.info("[Steel_and_honor] Items registered for 1.21.8.");
     }
 
     private static Item register(String name, Item item) {
-        Identifier id = Identifier.of(Steel_and_honor.MOD_ID, name); // 1.21.8 uses factory instead of public ctor
-        return Registry.register(Registries.ITEM, id, item);
+        return Registry.register(
+                Registries.ITEM,
+                Identifier.of(Steel_and_honor.MOD_ID, name),
+                item
+        );
     }
 }
